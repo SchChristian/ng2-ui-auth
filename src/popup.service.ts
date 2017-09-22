@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
-import { assign } from './utils';
+import {assign, getFullUrlPath} from './utils';
 import { ConfigService, IPopupOptions } from './config.service';
 import 'rxjs/add/observable/interval';
 import 'rxjs/add/observable/fromEvent';
@@ -78,32 +78,40 @@ export class PopupService {
                        ).take(1);
     }
 
-    pollPopup() {
+    pollPopup(redirectUri: string) {
+        let redirectUriParser: HTMLAnchorElement = <HTMLAnchorElement>document.createElement('a');
+        redirectUriParser.href = redirectUri;
+
+        let redirectUriPath = getFullUrlPath(redirectUriParser);
+
         return Observable
             .interval(50)
             .switchMap(() => {
                 if (!this.popupWindow || this.popupWindow.closed) {
                     return Observable.throw(new Error('Authentication Canceled'));
                 }
-                let documentOrigin = document.location.host;
-                let popupWindowOrigin = '';
+                let popupWindowPath = '';
                 try {
-                    popupWindowOrigin = this.popupWindow.location.host;
+                    popupWindowPath  = getFullUrlPath(this.popupWindow.location);
                 } catch (error) {
                     // ignore DOMException: Blocked a frame with origin from accessing a cross-origin frame.
                     // error instanceof DOMException && error.name === 'SecurityError'
                 }
-                if (popupWindowOrigin === documentOrigin && (this.popupWindow.location.search || this.popupWindow.location.hash)) {
-                    const queryParams = this.popupWindow.location.search.substring(1).replace(/\/$/, '');
-                    const hashParams = this.popupWindow.location.hash.substring(1).replace(/[\/$]/, '');
-                    const hash = this.parseQueryString(hashParams);
-                    const qs = this.parseQueryString(queryParams);
-                    this.popupWindow.close();
-                    const allParams = assign({}, qs, hash);
-                    if (allParams.error) {
-                        throw allParams.error;
+                if (redirectUriPath === popupWindowPath) {
+                    if (this.popupWindow.location.search || this.popupWindow.location.hash) {
+                        const queryParams = this.popupWindow.location.search.substring(1).replace(/\/$/, '');
+                        const hashParams = this.popupWindow.location.hash.substring(1).replace(/[\/$]/, '');
+                        const hash = this.parseQueryString(hashParams);
+                        const qs = this.parseQueryString(queryParams);
+                        this.popupWindow.close();
+                        const allParams = assign({}, qs, hash);
+                        if (allParams.error) {
+                            throw allParams.error;
+                        } else {
+                            return Observable.of(allParams);
+                        }
                     } else {
-                        return Observable.of(allParams);
+                        return Observable.throw(new Error('No token found after redirect'));
                     }
                 }
                 return Observable.empty();

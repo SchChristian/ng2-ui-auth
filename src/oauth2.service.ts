@@ -56,7 +56,7 @@ export class Oauth2Service {
         } else {
             openPopup = this.popup
                 .open(url, this.defaults.name, this.defaults.popupOptions/*, this.defaults.redirectUri*/)
-                .pollPopup();
+                .pollPopup(this.defaults.redirectUri);
         }
 
         return openPopup

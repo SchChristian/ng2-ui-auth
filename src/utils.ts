@@ -28,7 +28,7 @@ export function joinUrl(baseUrl: string, url: string) {
 
     let joined = [baseUrl, url].join('/');
 
-    let normalize = function(str) {
+    let normalize = function (str) {
         return str
             .replace(/[\/]+/g, '/')
             .replace(/\/\?/g, '?')
@@ -63,7 +63,21 @@ export function merge(obj1: object, obj2: object): any {
 }
 
 export function camelCase(name) {
-    return name.replace(/([\:\-\_]+(.))/g, function(_, separator, letter, offset) {
+    return name.replace(/([\:\-\_]+(.))/g, function (_, separator, letter, offset) {
         return offset ? letter.toUpperCase() : letter;
     });
+}
+
+export function getFullUrlPath(location: HTMLAnchorElement|Location): string {
+    if (!location.protocol) {
+        let temp = document.createElement('a');
+
+        temp.href = location.href;
+
+        location = temp;
+    }
+
+    return location.protocol + '//' + location.hostname
+        + (location.port && location.port !== '80' && location.port !== '443' ? location.port : '') // Append the port only when it's not the default Port
+        + (/^\//.test(location.pathname) ? location.pathname : '/' + location.pathname);
 }
