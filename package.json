@@ -1,11 +1,10 @@
 {
   "name": "ng2-ui-auth",
-  "version": "7.0.2",
+  "version": "8.0.0",
   "description": "angular2 migration for satellizer",
   "scripts": {
     "build": "ng-packagr -p ng-package.json",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "tslint 'src/**/*.ts' --type-check -p tsconfig.json"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
     "angular",
@@ -24,22 +23,24 @@
   },
   "homepage": "https://github.com/ronzeidman/ng2-ui-auth#readme",
   "peerDependencies": {
-    "@angular/http": "4.x",
-    "@angular/core": "4.x",
-    "rxjs": "5.x"
+    "@angular/common": "5.x.x",
+    "@angular/core": "5.x.x",
+    "rxjs": "^5.5.2"
   },
   "devDependencies": {
-    "@angular/common": "4.0.0",
-    "@angular/compiler": "4.0.0",
-    "@angular/compiler-cli": "4.0.0",
-    "@angular/core": "4.0.0",
-    "@angular/http": "4.0.0",
-    "@angular/platform-browser": "4.0.0",
-    "@angular/platform-server": "4.0.0",
-    "codelyzer": "^3.1.2",
-    "ng-packagr": "^1.0.0-pre.7",
-    "rxjs": "5.4.2",
-    "tslint": "^5.5.0",
-    "zone.js": "0.8.12"
+    "@angular/animations": "5.0.0",
+    "@angular/common": "5.0.0",
+    "@angular/compiler": "5.0.0",
+    "@angular/compiler-cli": "5.0.0",
+    "@angular/core": "5.0.0",
+    "@angular/platform-browser": "5.0.0",
+    "@angular/platform-browser-dynamic": "5.0.0",
+    "@angular/platform-server": "5.0.0",
+    "codelyzer": "^4.0.1",
+    "ng-packagr": "^1.5.0",
+    "rxjs": "^5.5.2",
+    "tslint": "^5.8.0",
+    "typescript": "2.3.4",
+    "zone.js": "^0.8.18"
   }
 }

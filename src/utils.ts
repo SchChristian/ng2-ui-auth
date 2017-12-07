@@ -2,25 +2,6 @@
  * Created by Ron on 17/12/2015.
  */
 
-export function assign(target: any, ...src: any[]): any {
-    if (target == null) {
-        throw new TypeError('Cannot convert undefined or null to object');
-    }
-
-    target = Object(target);
-    for (let index = 1; index < arguments.length; index++) {
-        let source = arguments[index];
-        if (source != null) {
-            for (let key in source) {
-                if (Object.prototype.hasOwnProperty.call(source, key)) {
-                    target[key] = source[key];
-                }
-            }
-        }
-    }
-    return target;
-}
-
 export function joinUrl(baseUrl: string, url: string) {
     if (/^(?:[a-z]+:)?\/\//i.test(url)) {
         return url;
@@ -39,12 +20,12 @@ export function joinUrl(baseUrl: string, url: string) {
     return normalize(joined);
 }
 
-export function merge(obj1: object, obj2: object): any {
+export function deepMerge(obj1: object, obj2: object): any {
     let result = {};
     for (let i in obj1) {
         if (obj1.hasOwnProperty(i)) {
             if ((i in obj2) && (typeof obj1[i] === 'object') && (i !== null)) {
-                result[i] = merge(obj1[i], obj2[i]);
+                result[i] = deepMerge(obj1[i], obj2[i]);
             } else {
                 result[i] = obj1[i];
             }
@@ -63,9 +44,32 @@ export function merge(obj1: object, obj2: object): any {
 }
 
 export function camelCase(name) {
-    return name.replace(/([\:\-\_]+(.))/g, function (_, separator, letter, offset) {
+    return name.replace(/([\:\-\_]+(.))/g, function(_, separator, letter, offset) {
         return offset ? letter.toUpperCase() : letter;
     });
+}
+
+export function buildQueryString(obj: object) {
+    return Object
+        .keys(obj)
+        .map((key) => !!obj[key] ? `${encodeURIComponent(key)}=${encodeURIComponent(obj[key])}` : key)
+        .join('&');
+}
+
+export function getWindowOrigin(w = window) {
+    try {
+        if (!w || !w.location) {
+            return null;
+        }
+        if (!w.location.origin) {
+            return `${w.location.protocol}//${w.location.hostname}${w.location.port ? ':' + w.location.port : ''}`;
+        }
+        return w.location.origin;
+    } catch (error) {
+        return null;
+        // ignore DOMException: Blocked a frame with origin from accessing a cross-origin frame.
+        // error instanceof DOMException && error.name === 'SecurityError'
+    }
 }
 
 export function getFullUrlPath(location: HTMLAnchorElement|Location): string {

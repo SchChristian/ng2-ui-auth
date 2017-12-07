@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
-import { RequestOptionsArgs, Response } from '@angular/http';
 import { SharedService } from './shared.service';
 import { LocalService } from './local.service';
 import { OauthService } from './oauth.service';
 import { Observable } from 'rxjs/Observable';
+import { StorageType } from './storage-type.enum';
 
 /**
  * Created by Ron on 17/12/2015.
@@ -12,59 +12,59 @@ import { Observable } from 'rxjs/Observable';
 @Injectable()
 export class AuthService {
     constructor(private shared: SharedService,
-                private local: LocalService,
-                private oauth: OauthService) {
+        private local: LocalService,
+        private oauth: OauthService) {
     }
 
-    login(user, opts?: RequestOptionsArgs): Observable<Response> {
-        return this.local.login(user, opts);
+    public login<T extends string | object = any>(user: string | object, url?: string): Observable<T> {
+        return this.local.login<T>(user, url);
     }
 
-    signup(user, opts?: RequestOptionsArgs): Observable<Response> {
-        return this.local.signup(user, opts);
+    public signup<T = any>(user: string | object, url?: string): Observable<T> {
+        return this.local.signup<T>(user, url);
     }
 
-    logout(): Observable<void> {
+    public logout(): Observable<void> {
         return this.shared.logout();
     }
 
-    authenticate(name: string, userData?: any): Observable<Response> {
-        return this.oauth.authenticate(name, userData);
+    public authenticate<T = any>(name: string, userData?: any): Observable<T> {
+        return this.oauth.authenticate<T>(name, userData);
     }
 
-    link(name: string, userData?: any): Observable<Response> {
-        return this.oauth.authenticate(name, userData);
+    public link<T = any>(name: string, userData?: any): Observable<T> {
+        return this.oauth.authenticate<T>(name, userData);
     }
 
-    unlink(provider: string, opts: RequestOptionsArgs): Observable<Response> {
-        return this.oauth.unlink(provider, opts);
+    public unlink<T = any>(provider: string, url?: string): Observable<T> {
+        return this.oauth.unlink<T>(provider, url);
     }
 
-    isAuthenticated(): boolean {
+    public isAuthenticated(): boolean {
         return this.shared.isAuthenticated();
     }
 
-    getToken(): string {
+    public getToken(): string | null {
         return this.shared.getToken();
     }
 
-    setToken(token: string | Response): void {
+    public setToken(token: string | object): void {
         this.shared.setToken(token);
     }
 
-    removeToken(): void {
+    public removeToken(): void {
         this.shared.removeToken();
     }
 
-    getPayload(): any {
+    public getPayload(): any {
         return this.shared.getPayload();
     }
 
-    setStorageType(type: 'localStorage' | 'sessionStorage' | 'cookie' | 'sessionCookie'): void {
-        this.shared.setStorageType(type);
+    public setStorageType(type: StorageType): boolean {
+        return this.shared.setStorageType(type);
     }
 
-    getExpirationDate(): Date {
+    public getExpirationDate(): Date | null {
         return this.shared.getExpirationDate();
     }
 }

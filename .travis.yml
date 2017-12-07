@@ -1,6 +1,6 @@
 language: node_js
 node_js:
-- '7.10.0'
+- '8'
 env:
   global:
   - GH_REF: github.com/ronzeidman/ng2-ui-auth
@@ -9,7 +9,6 @@ before_install:
 - sh -e /etc/init.d/xvfb start
 script:
 - npm run build
-- npm run lint
 after_success:
 before_deploy:
 - cd dist

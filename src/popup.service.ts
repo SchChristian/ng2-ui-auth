@@ -1,18 +1,14 @@
+import { deepMerge, getWindowOrigin, getFullUrlPath } from './utils';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
-import {assign, getFullUrlPath} from './utils';
-import { ConfigService, IPopupOptions } from './config.service';
-import 'rxjs/add/observable/interval';
-import 'rxjs/add/observable/fromEvent';
-import 'rxjs/add/observable/throw';
-import 'rxjs/add/observable/empty';
-import 'rxjs/add/observable/merge';
-import 'rxjs/add/operator/switchMap';
-import 'rxjs/add/operator/take';
-import 'rxjs/add/operator/map';
-
-import 'rxjs/add/operator/takeWhile';
-import 'rxjs/add/operator/delay';
+import { ConfigService, IPopupOptions, IOauth2Options, IOauth1Options } from './config.service';
+import { switchMap, take, map, takeWhile, delay } from 'rxjs/operators';
+import { interval } from 'rxjs/observable/interval';
+import { fromEvent } from 'rxjs/observable/fromEvent';
+import { _throw } from 'rxjs/observable/throw';
+import { empty } from 'rxjs/observable/empty';
+import { merge } from 'rxjs/observable/merge';
+import { of } from 'rxjs/observable/of';
 
 /**
  * Created by Ron on 17/12/2015.
@@ -20,128 +16,129 @@ import 'rxjs/add/operator/delay';
 
 @Injectable()
 export class PopupService {
-    url = '';
-    popupWindow: Window = null;
+    public open(url: string, options: IOauth2Options | IOauth1Options, cordova: boolean | null) {
+        const stringifiedOptions = this.stringifyOptions(this.prepareOptions(options.popupOptions));
+        const UA = window.navigator.userAgent;
+        cordova = cordova === null ? this.isCordovaApp() : cordova;
+        const windowName = cordova ? '_blank' : options.name;
 
-    constructor(private config: ConfigService) {}
-    open(url: string, name: string, options: IPopupOptions) {
-        this.url = url;
+        const popupWindow = window.open(url, windowName, stringifiedOptions);
 
-        let stringifiedOptions = this.stringifyOptions(this.prepareOptions(options));
-        let UA = window.navigator.userAgent;
-        let windowName = (this.config.cordova || UA.indexOf('CriOS') > -1) ? '_blank' : name;
-
-        this.popupWindow = window.open(url, windowName, stringifiedOptions);
-
-        window['popup'] = this.popupWindow;
-
-        if (this.popupWindow && this.popupWindow.focus) {
-            this.popupWindow.focus();
+        if (popupWindow && popupWindow.focus) {
+            popupWindow.focus();
         }
 
-        return this;
+        return cordova
+            ? this.eventListener(popupWindow, options.redirectUri || getWindowOrigin())
+            : this.pollPopup(popupWindow, options.redirectUri || getWindowOrigin());
     }
 
-    eventListener(redirectUri: string) {
-        return Observable
-            .merge(
-                Observable.fromEvent(this.popupWindow, 'loadstart')
-                .switchMap((event: Event & { url: string }) => {
-
-                    if (!this.popupWindow || this.popupWindow.closed) {
-                        return Observable.throw(new Error('Authentication Canceled'));
-                    }
-                    if (event.url.indexOf(redirectUri) !== 0) {
-                        return Observable.empty();
-                    }
-
-                    let parser = document.createElement('a');
-                    parser.href = event.url;
-
-                    if (parser.search || parser.hash) {
-                        const queryParams = parser.search.substring(1).replace(/\/$/, '');
-                        const hashParams = parser.hash.substring(1).replace(/\/$/, '');
-                        const hash = this.parseQueryString(hashParams);
-                        const qs = this.parseQueryString(queryParams);
-                        const allParams = assign({}, qs, hash);
-
-                        this.popupWindow.close();
-
-                        if (allParams.error) {
-                            throw allParams.error;
-                        } else {
-                            return Observable.of(allParams);
-                        }
-                    }
-                    return Observable.empty();
-                }), Observable.fromEvent<Event>(this.popupWindow, 'exit').delay(100).map(() => { throw new Error('Authentication Canceled'); }),
-                       ).take(1);
-    }
-
-    pollPopup(redirectUri: string) {
-        let redirectUriParser: HTMLAnchorElement = <HTMLAnchorElement>document.createElement('a');
-        redirectUriParser.href = redirectUri;
-
-        let redirectUriPath = getFullUrlPath(redirectUriParser);
-
-        return Observable
-            .interval(50)
-            .switchMap(() => {
-                if (!this.popupWindow || this.popupWindow.closed) {
+    public eventListener(popupWindow: Window, redirectUri: string) {
+        if (!popupWindow) {
+            throw new Error('Popup was not created');
+        }
+        return merge(
+            fromEvent<Event>(popupWindow, 'exit').pipe(
+                delay(100),
+                map(() => { throw new Error('Authentication Canceled'); }),
+            ),
+            fromEvent(popupWindow, 'loadstart'),
+        ).pipe(
+            switchMap((event: Event & { url: string }) => {
+                if (!popupWindow || popupWindow.closed) {
                     return Observable.throw(new Error('Authentication Canceled'));
                 }
+                if (event.url.indexOf(redirectUri) !== 0) {
+                    return empty();
+                }
+
+                const parser = document.createElement('a');
+                parser.href = event.url;
+
+                if (parser.search || parser.hash) {
+                    const queryParams = parser.search.substring(1).replace(/\/$/, '');
+                    const hashParams = parser.hash.substring(1).replace(/\/$/, '');
+                    const hash = this.parseQueryString(hashParams);
+                    const qs = this.parseQueryString(queryParams);
+                    const allParams = { ...qs, ...hash };
+
+                    popupWindow.close();
+
+                    if (allParams.error) {
+                        throw allParams.error;
+                    } else {
+                        return of(allParams);
+                    }
+                }
+                return empty();
+            }),
+            take(1),
+        );
+    }
+
+    pollPopup(popupWindow: Window, redirectUri: string) {
+        return interval(50)
+            .pipe(
+            switchMap(() => {
+                if (!popupWindow || popupWindow.closed) {
+                    return _throw(new Error('Authentication Canceled'));
+                }
+
                 let popupWindowPath = '';
                 try {
-                    popupWindowPath  = getFullUrlPath(this.popupWindow.location);
+                    popupWindowPath  = getFullUrlPath(popupWindow.location);
                 } catch (error) {
                     // ignore DOMException: Blocked a frame with origin from accessing a cross-origin frame.
                     // error instanceof DOMException && error.name === 'SecurityError'
                 }
-                if (redirectUriPath === popupWindowPath) {
-                    if (this.popupWindow.location.search || this.popupWindow.location.hash) {
-                        const queryParams = this.popupWindow.location.search.substring(1).replace(/\/$/, '');
-                        const hashParams = this.popupWindow.location.hash.substring(1).replace(/[\/$]/, '');
+                if (redirectUri === popupWindowPath) {
+                    if (popupWindow.location.search || popupWindow.location.hash) {
+                        const queryParams = popupWindow.location.search.substring(1).replace(/\/$/, '');
+                        const hashParams = popupWindow.location.hash.substring(1).replace(/[\/$]/, '');
                         const hash = this.parseQueryString(hashParams);
                         const qs = this.parseQueryString(queryParams);
-                        this.popupWindow.close();
-                        const allParams = assign({}, qs, hash);
+                        popupWindow.close();
+                        const allParams = { ...qs, ...hash };
                         if (allParams.error) {
                             throw allParams.error;
                         } else {
-                            return Observable.of(allParams);
+                            return of(allParams);
                         }
                     } else {
                         return Observable.throw(new Error('No token found after redirect'));
                     }
                 }
-                return Observable.empty();
-            })
-            .take(1);
+                return empty();
+            }),
+            take(1),
+        );
     }
 
-    private prepareOptions(options: IPopupOptions) {
+    private prepareOptions(options?: IPopupOptions) {
         options = options || {};
-        let width = options.width || 500;
-        let height = options.height || 500;
-        return assign(
-            {
-                width: width,
-                height: height,
-                left: window.screenX + ((window.outerWidth - width) / 2),
-                top: window.screenY + ((window.outerHeight - height) / 2.5),
-                toolbar: options.visibleToolbar ? 'yes' : 'no',
-            },
-            options);
+        const width = options.width || 500;
+        const height = options.height || 500;
+        return {
+            width,
+            height,
+            left: window.screenX + ((window.outerWidth - width) / 2),
+            top: window.screenY + ((window.outerHeight - height) / 2.5),
+            toolbar: options.visibleToolbar ? 'yes' : 'no',
+            ...options,
+        };
     }
 
-    private stringifyOptions(options: Object) {
-        return Object.keys(options).map((key) => {
-            return key + '=' + options[key];
-        }).join(',');
+    private stringifyOptions(options: { [index: string]: string | number | boolean | null | undefined }) {
+        return Object.keys(options)
+            .map((key) => options[key] === null || options[key] === undefined
+                ? key
+                : key + '=' + options[key],
+        ).join(',');
     }
 
     private parseQueryString(joinedKeyValue: string): any {
-        let key, value;
+        let key;
+        let value;
         return joinedKeyValue.split('&').reduce(
             (obj, keyValue) => {
                 if (keyValue) {
@@ -151,6 +148,13 @@ export class PopupService {
                 }
                 return obj;
             },
-            {});
+            {} as { [k: string]: string | true });
+    }
+
+    private isCordovaApp() {
+        return !!(window && (
+            (window as any).cordova ||
+            window.navigator && window.navigator.userAgent && window.navigator.userAgent.indexOf('CriOS') > -1
+        ));
     }
 }

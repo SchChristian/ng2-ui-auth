@@ -1,7 +1,10 @@
 import { Injectable } from '@angular/core';
-import { ConfigService } from './config.service';
+import { ConfigService, IConfigOptions } from './config.service';
+import { StorageType, MEMORY, COOKIE, SESSION_COOKIE, LOCAL_STORAGE, SESSION_STORAGE, NONE } from './storage-type.enum';
 
 export abstract class StorageService {
+    abstract updateStorageType(storageType: StorageType): boolean;
+
     abstract get(key: string): string;
 
     abstract set(key: string, value: string, date: string): void;
@@ -14,52 +17,103 @@ export abstract class StorageService {
  */
 @Injectable()
 export class BrowserStorageService extends StorageService {
-    private store = {};
-    private isStorageAvailable: boolean;
+    private store: { [key: string]: string } = {};
+    private storageType: StorageType = MEMORY;
 
     constructor(private config: ConfigService) {
         super();
-        this.isStorageAvailable = this.checkIsStorageAvailable(config);
-        if (!this.isStorageAvailable) {
-            console.warn(config.storageType + ' is not available.');
+        if (!this.updateStorageType(config.options.storageType)) {
+            console.warn(config.options.storageType + ' is not available.');
         }
     }
 
-    get(key: string) {
-        return this.isStorageAvailable
-            ? this.config.storageType === 'cookie' || this.config.storageType === 'sessionCookie'
-                ? this.getCookie(key)
-                : window[this.config.storageType].getItem(key)
-            : this.store[key];
-    }
-
-    set(key: string, value: string, date: string) {
-        this.isStorageAvailable
-            ? this.config.storageType === 'cookie' || this.config.storageType === 'sessionCookie'
-            ? this.setCookie(key, value, this.config.storageType === 'cookie' ? date : '')
-            : window[this.config.storageType].setItem(key, value)
-            : this.store[key] = value;
-    }
-
-    remove(key: string) {
-        this.isStorageAvailable
-            ? this.config.storageType === 'cookie' || this.config.storageType === 'sessionCookie'
-            ? this.removeCookie(key)
-            : window[this.config.storageType].removeItem(key)
-            : delete this.store[key];
-    }
-
-    private checkIsStorageAvailable(config: ConfigService) {
-        if (config.storageType === 'cookie' || config.storageType === 'sessionCookie') {
-            return this.isCookieStorageAvailable();
+    public updateStorageType(storageType: StorageType) {
+        const isStorageAvailable = this.checkIsStorageAvailable(storageType);
+        if (!isStorageAvailable) {
+            return false;
         }
+        this.storageType = storageType;
+        return true;
+    }
+
+    public get(key: string) {
+        switch (this.storageType) {
+            case COOKIE:
+            case SESSION_COOKIE:
+                return this.getCookie(key);
+            case LOCAL_STORAGE:
+            case SESSION_STORAGE:
+                return window[this.storageType].getItem(key);
+            case MEMORY:
+                return this.store[key];
+            case NONE:
+            default:
+                return null;
+        }
+    }
+
+    public set(key: string, value: string, date: string) {
+        switch (this.storageType) {
+            case COOKIE:
+            case SESSION_COOKIE:
+                this.setCookie(key, value, this.storageType === COOKIE ? date : '');
+                break;
+            case LOCAL_STORAGE:
+            case SESSION_STORAGE:
+                window[this.storageType].setItem(key, value);
+                break;
+            case MEMORY:
+                this.store[key] = value;
+                break;
+            case NONE:
+            default:
+                break;
+        }
+    }
+
+    public remove(key: string) {
+        switch (this.storageType) {
+            case COOKIE:
+            case SESSION_COOKIE:
+                this.removeCookie(key);
+                break;
+            case LOCAL_STORAGE:
+            case SESSION_STORAGE:
+                window[this.storageType].removeItem(key);
+                break;
+            case MEMORY:
+                delete this.store[key];
+                break;
+            case NONE:
+            default:
+                break;
+        }
+    }
+
+    private checkIsStorageAvailable(storageType: StorageType) {
+        switch (storageType) {
+            case COOKIE:
+            case SESSION_COOKIE:
+                return this.isCookieStorageAvailable();
+            case LOCAL_STORAGE:
+            case SESSION_STORAGE:
+                return this.isWindowStorageAvailable(storageType);
+            case NONE:
+            case MEMORY:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private isWindowStorageAvailable(storageType: typeof SESSION_STORAGE | typeof LOCAL_STORAGE) {
         try {
-            const supported = window && config.storageType in window && window[config.storageType] !== null;
+            const supported = window && storageType in window && window[storageType] !== null;
 
             if (supported) {
                 const key = Math.random().toString(36).substring(7);
-                window[this.config.storageType].setItem(key, '');
-                window[this.config.storageType].removeItem(key);
+                window[storageType].setItem(key, '');
+                window[storageType].removeItem(key);
             }
 
             return supported;
