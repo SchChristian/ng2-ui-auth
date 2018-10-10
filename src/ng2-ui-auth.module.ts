@@ -1,7 +1,7 @@
 /**
  * Created by Ron on 25/12/2015.
  */
-import { ConfigService, IPartialConfigOptions, CONFIG_OPTIONS, IProviders } from './config.service';
+import { ConfigService, IPartialConfigOptions, CONFIG_OPTIONS, IProviders, IOauth2Options, IOauth1Options } from './config.service';
 import { SharedService } from './shared.service';
 import { OauthService } from './oauth.service';
 import { PopupService } from './popup.service';
@@ -48,5 +48,7 @@ export {
     JwtInterceptor,
     CONFIG_OPTIONS,
     IProviders,
+    IOauth2Options,
+    IOauth1Options,
     StorageType,
 };
