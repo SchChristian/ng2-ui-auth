@@ -1,5 +1,4 @@
 import { Inject, Injectable, InjectionToken } from '@angular/core';
-import { Observable } from 'rxjs/Observable';
 import { StorageType, LOCAL_STORAGE } from './storage-type.enum';
 
 /**

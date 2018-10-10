@@ -1,14 +1,8 @@
-import { deepMerge, getWindowOrigin, getFullUrlPath } from './utils';
+import { getWindowOrigin, getFullUrlPath } from './utils';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs/Observable';
-import { ConfigService, IPopupOptions, IOauth2Options, IOauth1Options } from './config.service';
-import { switchMap, take, map, takeWhile, delay } from 'rxjs/operators';
-import { interval } from 'rxjs/observable/interval';
-import { fromEvent } from 'rxjs/observable/fromEvent';
-import { _throw } from 'rxjs/observable/throw';
-import { empty } from 'rxjs/observable/empty';
-import { merge } from 'rxjs/observable/merge';
-import { of } from 'rxjs/observable/of';
+import { EMPTY, fromEvent, interval, merge, Observable, of, throwError } from 'rxjs';
+import { IPopupOptions, IOauth2Options, IOauth1Options } from './config.service';
+import { switchMap, take, map, delay } from 'rxjs/operators';
 
 /**
  * Created by Ron on 17/12/2015.
@@ -49,7 +43,7 @@ export class PopupService {
                     return Observable.throw(new Error('Authentication Canceled'));
                 }
                 if (event.url.indexOf(redirectUri) !== 0) {
-                    return empty();
+                    return EMPTY;
                 }
 
                 const parser = document.createElement('a');
@@ -70,7 +64,7 @@ export class PopupService {
                         return of(allParams);
                     }
                 }
-                return empty();
+                return EMPTY;
             }),
             take(1),
         );
@@ -81,7 +75,7 @@ export class PopupService {
             .pipe(
             switchMap(() => {
                 if (!popupWindow || popupWindow.closed) {
-                    return _throw(new Error('Authentication Canceled'));
+                    return throwError(new Error('Authentication Canceled'));
                 }
 
                 let popupWindowPath = '';
@@ -105,10 +99,10 @@ export class PopupService {
                             return of(allParams);
                         }
                     } else {
-                        return Observable.throw(new Error('No token found after redirect'));
+                        return throwError(new Error('No token found after redirect'));
                     }
                 }
-                return empty();
+                return EMPTY;
             }),
             take(1),
         );

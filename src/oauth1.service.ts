@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { PopupService } from './popup.service';
 import { joinUrl, buildQueryString } from './utils';
 import { ConfigService, IOauth1Options } from './config.service';
-import { Observable } from 'rxjs/Observable';
+import { Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
 

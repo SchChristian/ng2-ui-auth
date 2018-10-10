@@ -2,9 +2,9 @@ import { Injectable } from '@angular/core';
 import { SharedService } from './shared.service';
 import { ConfigService } from './config.service';
 import { joinUrl } from './utils';
-import { Observable } from 'rxjs/Observable';
+import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import { HttpClient, HttpRequest } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 
 /**
  * Created by Ron on 17/12/2015.

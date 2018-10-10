@@ -1,15 +1,14 @@
 import { IOauthService } from './oauth-service.interface';
-import { StorageService } from './storage.service';
 import { PopupService } from './popup.service';
-import { Injectable, Injector, Provider, ReflectiveInjector } from '@angular/core';
+import { Injectable, Injector } from '@angular/core';
 import { Oauth1Service } from './oauth1.service';
 import { Oauth2Service } from './oauth2.service';
 import { SharedService } from './shared.service';
 import { joinUrl } from './utils';
-import { ConfigService, IOauth1Options } from './config.service';
-import { Observable } from 'rxjs/Observable';
+import { ConfigService } from './config.service';
+import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import { HttpClient, HttpRequest } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 
 /**
  * Created by Ron on 17/12/2015.

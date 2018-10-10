@@ -11,7 +11,7 @@ import { LocalService } from './local.service';
 import { AuthService } from './auth.service';
 import { JwtInterceptor } from './interceptor.service';
 import { StorageService, BrowserStorageService } from './storage.service';
-import { InjectionToken, ModuleWithProviders, NgModule, Type } from '@angular/core';
+import { ModuleWithProviders, NgModule } from '@angular/core';
 import { HTTP_INTERCEPTORS, HttpClientModule, HttpClient } from '@angular/common/http';
 import { StorageType } from './storage-type.enum';
 

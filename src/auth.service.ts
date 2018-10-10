@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { SharedService } from './shared.service';
 import { LocalService } from './local.service';
 import { OauthService } from './oauth.service';
-import { Observable } from 'rxjs/Observable';
+import { Observable } from 'rxjs';
 import { StorageType } from './storage-type.enum';
 
 /**
@@ -28,11 +28,11 @@ export class AuthService {
         return this.shared.logout();
     }
 
-    public authenticate<T = any>(name: string, userData?: any): Observable<T> {
+    public authenticate<T extends object | string>(name: string, userData?: any): Observable<T> {
         return this.oauth.authenticate<T>(name, userData);
     }
 
-    public link<T = any>(name: string, userData?: any): Observable<T> {
+    public link<T extends object | string>(name: string, userData?: any): Observable<T> {
         return this.oauth.authenticate<T>(name, userData);
     }
 

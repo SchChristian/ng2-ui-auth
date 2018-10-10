@@ -1,13 +1,11 @@
 import { IOauthService } from './oauth-service.interface';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs/Observable';
-import { joinUrl, deepMerge, buildQueryString, getWindowOrigin } from './utils';
+import { Observable, of } from 'rxjs';
+import { joinUrl, buildQueryString, getWindowOrigin } from './utils';
 import { ConfigService, IOauth2Options } from './config.service';
 import { PopupService } from './popup.service';
-import { StorageService } from './storage.service';
 import { HttpClient } from '@angular/common/http';
 import { switchMap } from 'rxjs/operators';
-import { of } from 'rxjs/observable/of';
 
 /**
  * Created by Ron on 17/12/2015.

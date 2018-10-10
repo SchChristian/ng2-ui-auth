@@ -1,8 +1,7 @@
 /**
  * Created by Ron on 17/12/2015.
  */
-import { Observable } from 'rxjs/Observable';
-import { Subscriber } from 'rxjs/Subscriber';
+import { Observable, Subscriber } from 'rxjs';
 import { Injectable } from '@angular/core';
 import { ConfigService } from './config.service';
 import { StorageService } from './storage.service';

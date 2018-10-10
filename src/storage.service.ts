@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { ConfigService, IConfigOptions } from './config.service';
+import { ConfigService } from './config.service';
 import { StorageType, MEMORY, COOKIE, SESSION_COOKIE, LOCAL_STORAGE, SESSION_STORAGE, NONE } from './storage-type.enum';
 
 export abstract class StorageService {
