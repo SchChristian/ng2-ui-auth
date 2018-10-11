@@ -71,6 +71,11 @@ export class PopupService {
     }
 
     pollPopup(popupWindow: Window, redirectUri: string) {
+        let redirectUriParser: HTMLAnchorElement = <HTMLAnchorElement>document.createElement('a');
+        redirectUriParser.href = redirectUri;
+
+        let redirectUriPath = getFullUrlPath(redirectUriParser);
+
         return interval(50)
             .pipe(
             switchMap(() => {
@@ -85,7 +90,7 @@ export class PopupService {
                     // ignore DOMException: Blocked a frame with origin from accessing a cross-origin frame.
                     // error instanceof DOMException && error.name === 'SecurityError'
                 }
-                if (redirectUri === popupWindowPath) {
+                if (redirectUriPath === popupWindowPath) {
                     if (popupWindow.location.search || popupWindow.location.hash) {
                         const queryParams = popupWindow.location.search.substring(1).replace(/\/$/, '');
                         const hashParams = popupWindow.location.hash.substring(1).replace(/[\/$]/, '');
