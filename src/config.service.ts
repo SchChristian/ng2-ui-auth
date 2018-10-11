@@ -262,7 +262,7 @@ export class ConfigService {
         }
         this.options = {
             ...defaultOptions,
-            ...options,
+            ...optionObj,
             providers: {
                 ...optionObj.providers,
                 ...Object
