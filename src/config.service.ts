@@ -1,9 +1,11 @@
 import { Inject, Injectable, InjectionToken } from '@angular/core';
 import { StorageType, LOCAL_STORAGE } from './storage-type.enum';
+import { IPartialConfigOptions } from './ng2-ui-auth.module';
 
 /**
  * Created by Ron on 17/12/2015.
  */
+export type ConfigOptions = IPartialConfigOptions | Function;
 
 export const CONFIG_OPTIONS = new InjectionToken<any>('config.options');
 
@@ -251,17 +253,23 @@ export const defaultOptions: IConfigOptions = {
 export class ConfigService {
     public options: IConfigOptions;
 
-    constructor(@Inject(CONFIG_OPTIONS) options: IPartialConfigOptions) {
+    constructor(@Inject(CONFIG_OPTIONS) options: IPartialConfigOptions | Function) {
+        let optionObj: IPartialConfigOptions;
+        if (typeof options === 'function') {
+            optionObj = options();
+        } else {
+            optionObj = options;
+        }
         this.options = {
             ...defaultOptions,
             ...options,
             providers: {
-                ...options.providers,
+                ...optionObj.providers,
                 ...Object
                     .keys(defaultOptions.providers)
-                    .concat(Object.keys(options.providers || {}))
-                    .map((key) => options.providers && options.providers[key]
-                        ? { [key]: { ...defaultOptions.providers[key], ...options.providers[key] } }
+                    .concat(Object.keys(optionObj.providers || {}))
+                    .map((key) => optionObj.providers && optionObj.providers[key]
+                        ? { [key]: { ...defaultOptions.providers[key], ...optionObj.providers[key] } }
                         : { [key]: defaultOptions.providers[key] })
                     .reduce((acc, next) => ({ ...acc, ...next }), {}),
             },

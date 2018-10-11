@@ -1,7 +1,15 @@
 /**
  * Created by Ron on 25/12/2015.
  */
-import { ConfigService, IPartialConfigOptions, CONFIG_OPTIONS, IProviders, IOauth2Options, IOauth1Options } from './config.service';
+import {
+    ConfigService,
+    IPartialConfigOptions,
+    CONFIG_OPTIONS,
+    IProviders,
+    IOauth2Options,
+    IOauth1Options,
+    ConfigOptions
+} from './config.service';
 import { SharedService } from './shared.service';
 import { OauthService } from './oauth.service';
 import { PopupService } from './popup.service';
@@ -17,7 +25,7 @@ import { StorageType } from './storage-type.enum';
 
 @NgModule({ imports: [HttpClientModule] })
 export class Ng2UiAuthModule {
-    static forRoot(configOptions?: IPartialConfigOptions, defaultJwtInterceptor = true): ModuleWithProviders {
+    static forRoot(configOptions?: ConfigOptions, defaultJwtInterceptor = true): ModuleWithProviders {
         return {
             ngModule: Ng2UiAuthModule,
             providers: [

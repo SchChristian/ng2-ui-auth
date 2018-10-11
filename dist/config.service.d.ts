@@ -1,8 +1,10 @@
 import { InjectionToken } from '@angular/core';
 import { StorageType } from './storage-type.enum';
+import { IPartialConfigOptions } from './ng2-ui-auth.module';
 /**
  * Created by Ron on 17/12/2015.
  */
+export declare type ConfigOptions = IPartialConfigOptions | Function;
 export declare const CONFIG_OPTIONS: InjectionToken<any>;
 export interface IPopupOptions {
     width?: number;
@@ -77,5 +79,5 @@ export interface IPartialConfigOptions {
 export declare const defaultOptions: IConfigOptions;
 export declare class ConfigService {
     options: IConfigOptions;
-    constructor(options: IPartialConfigOptions);
+    constructor(options: IPartialConfigOptions | Function);
 }
